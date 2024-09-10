@@ -232,7 +232,7 @@ func (s *Server) CreateTender(ctx echo.Context) error {
 		Name:           body.Name,
 		Description:    body.Description,
 		ServiceType:    entity.ServiceType(body.ServiceType),
-		Status:         entity.TenderStatus(body.Status),
+		Status:         entity.TenderStatusCreated,
 		OrganizationID: organization.ID,
 		CreatorID:      employee.ID,
 		Version:        1,
