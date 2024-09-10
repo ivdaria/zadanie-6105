@@ -1,15 +1,23 @@
-FROM gradle:4.7.0-jdk8-alpine AS build
-COPY --chown=gradle:gradle . /home/gradle/src
-WORKDIR /home/gradle/src
-RUN gradle build --no-daemon 
+# базовый образ
+FROM golang:1.22
 
-FROM openjdk:8-jre-slim
+# скопировать все файлы
+COPY . /var/app
 
+#рабочая директория
+WORKDIR /var/app
+
+# установить значения переменным окружения CGO_ENABLED и GOOS, выполнить команду go build -o /docker-gs-ping
+# Build
+RUN go build -o /zadanie ./cmd
+
+# Optional:
+# To bind to a TCP port, runtime parameters must be supplied to the docker command.
+# But we can document in the Dockerfile what ports
+# the application is going to listen on by default.
+# https://docs.docker.com/reference/dockerfile/#expose
 EXPOSE 8080
 
-RUN mkdir /app
-
-COPY --from=build /home/gradle/src/build/libs/*.jar /app/spring-boot-application.jar
-
-ENTRYPOINT ["java", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCGroupMemoryLimitForHeap", "-Djava.security.egd=file:/dev/./urandom","-jar","/app/spring-boot-application.jar"]
+# Run
+CMD ["/zadanie"]
 
