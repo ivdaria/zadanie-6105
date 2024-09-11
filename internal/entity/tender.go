@@ -33,6 +33,30 @@ type Tender struct {
 	CreatedAt      time.Time
 }
 
+func (t *Tender) Patch(newName *string, newDescription *string, newServiceType *ServiceType) *Tender {
+	patchedTender := *t
+	if newName != nil {
+		patchedTender.Name = *newName
+	}
+	if newDescription != nil {
+		patchedTender.Description = *newDescription
+	}
+	if newServiceType != nil {
+		patchedTender.ServiceType = *newServiceType
+	}
+
+	patchedTender.Version += 1
+
+	return &patchedTender
+}
+
+func (t *Tender) Rollback(tenderToRollback *Tender) *Tender {
+	result := *tenderToRollback
+	result.Version = t.Version + 1
+
+	return &result
+}
+
 type GetTendersFilter struct {
 	ServiceTypes *[]string
 }

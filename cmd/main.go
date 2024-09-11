@@ -6,6 +6,7 @@ import (
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/repository/bids"
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/repository/employee"
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/repository/organization"
+	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/repository/organization_responsible"
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/repository/tenders"
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/pkg/api"
 	"github.com/caarlos0/env/v11"
@@ -36,6 +37,7 @@ func main() {
 	tendersRepo := tenders.NewRepo(conn)
 	bidsRepo := bids.NewRepo(conn)
 	organizationRepo := organization.NewRepo(conn)
+	organizationResponsibleRepo := organization_responsible.NewRepo(conn)
 
 	e := echo.New()
 	handlers := gateway.NewServer(
@@ -43,6 +45,7 @@ func main() {
 		employeeRepo,
 		organizationRepo,
 		bidsRepo,
+		organizationResponsibleRepo,
 	)
 
 	api.RegisterHandlers(e, handlers)

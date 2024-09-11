@@ -33,7 +33,7 @@ func (mdls models) toOrganizations() []*entity.OrganizationResponsible {
 
 	result := make([]*entity.OrganizationResponsible, 0, len(mdls))
 	for _, m := range mdls {
-		result = append(result, m.toOrganizationResponsible()) //щто не так
+		result = append(result, m.toOrganizationResponsible())
 	}
 
 	return result

@@ -61,5 +61,7 @@ func modelFromTender(item *entity.Tender) *model {
 		Status:         item.Status,
 		OrganizationID: item.OrganizationID,
 		CreatorID:      item.CreatorID,
+		Version:        item.Version,
+		CreatedAt:      item.CreatedAt,
 	}
 }

@@ -48,15 +48,17 @@ CREATE TYPE tender_status AS ENUM (
 
 CREATE TABLE IF NOT EXISTS tenders
 (
-    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id              UUID DEFAULT uuid_generate_v4(),
     name            VARCHAR(100)                                        NOT NULL,
     description     VARCHAR(500),
     service_type    service_type,
     status          tender_status,
     organization_id UUID REFERENCES organization (id) ON DELETE CASCADE NOT NULL,
     creator_user_id uuid REFERENCES employee (id) ON DELETE CASCADE     NOT NULL,
-    version         INT,
-    created_at      TIMESTAMP        DEFAULT CURRENT_TIMESTAMP
+    version         INT NOT NULL,
+    created_at      TIMESTAMP        DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_tenders PRIMARY KEY (id, version)
 );
 
 CREATE TYPE bid_decision AS ENUM (
@@ -80,7 +82,7 @@ CREATE TYPE bid_author AS ENUM (
 CREATE TABLE IF NOT EXISTS bids
 (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tender_id       uuid REFERENCES tenders (id) ON DELETE CASCADE      NOT NULL,
+    tender_id       uuid NOT NULL,
     creator_id      uuid REFERENCES employee (id) ON DELETE CASCADE     NOT NULL,
     organization_id UUID REFERENCES organization (id) ON DELETE CASCADE NOT NULL,
     decision        bid_decision,

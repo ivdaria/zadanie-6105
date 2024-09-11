@@ -18,11 +18,11 @@ func NewRepo(db *pgx.Conn) *Repo {
 }
 
 func (r *Repo) CreateTender(ctx context.Context, tender *entity.Tender) (*entity.Tender, error) {
-	const query = `INSERT INTO tenders(name, description, service_type, status, organization_id, creator_user_id, version, created_at) 
-	VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`
-	var id uuid.UUID
+	const query = `INSERT INTO tenders(name, description, service_type, status, organization_id, creator_user_id, version) 
+	VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING *`
 	mdl := modelFromTender(tender)
-	err := r.db.QueryRow(ctx, query, mdl.Name, mdl.Description, mdl.ServiceType, mdl.Status, mdl.OrganizationID, mdl.OrganizationID, mdl.CreatorID, mdl.Version, mdl.CreatedAt).Scan(&id)
+	err := r.db.QueryRow(ctx, query, mdl.Name, mdl.Description, mdl.ServiceType, mdl.Status, mdl.OrganizationID, mdl.CreatorID, mdl.Version).
+		Scan(&mdl.ID, &mdl.Name, &mdl.Description, &mdl.ServiceType, &mdl.Status, &mdl.OrganizationID, &mdl.CreatorID, &mdl.Version, &mdl.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("create tender: %w", err)
 	}
@@ -33,14 +33,14 @@ func (r *Repo) CreateTender(ctx context.Context, tender *entity.Tender) (*entity
 
 func (r *Repo) GetAllTenders(ctx context.Context, filter entity.GetTendersFilter, pagination entity.Pagination) ([]*entity.Tender, error) {
 	params := pgx.NamedArgs{}
-	query := `SELECT * FROM tenders`
+	query := `SELECT DISTINCT ON (id) * FROM tenders`
 
 	if filter.ServiceTypes != nil {
 		query += ` WHERE service_type = ANY(@serviceTypes)`
 		params["serviceTypes"] = *filter.ServiceTypes
 	}
 
-	query += ` ORDER BY name ASC`
+	query += ` ORDER BY id, tenders.version DESC, name ASC`
 	query += pagination.ToSQL()
 
 	var mdls models
@@ -64,11 +64,11 @@ func (r *Repo) GetAllTenders(ctx context.Context, filter entity.GetTendersFilter
 
 func (r *Repo) GetTendersByUsername(ctx context.Context, username string, pagination entity.Pagination) ([]*entity.Tender, error) {
 	const query = `
-SELECT t.*
+SELECT DISTINCT ON (t.id) t.*
 FROM tenders t
 INNER JOIN employee e ON t.creator_user_id = e.id
 WHERE e.username = @username
-ORDER BY name
+ORDER BY t.id, t.version DESC, name
 `
 
 	var mdls models
@@ -90,55 +90,57 @@ ORDER BY name
 	return mdls.toTenders(), nil
 }
 
-func (r *Repo) GetStatusByID(ctx context.Context, id uuid.UUID) (entity.TenderStatus, error) {
-	const query = `SELECT * FROM tenders WHERE id = $1`
+func (r *Repo) GetTenderByID(ctx context.Context, id uuid.UUID) (*entity.Tender, error) {
+	const query = `SELECT * FROM tenders WHERE id = $1 ORDER BY version DESC LIMIT 1`
 
 	var mdl model
 
 	row := r.db.QueryRow(ctx, query, id)
 	if err := row.Scan(&mdl); err != nil {
-		return "nil", fmt.Errorf("scan row: %w", err)
-	}
-
-	tempTender := mdl.toTender()
-
-	return tempTender.Status, nil
-}
-
-func (r *Repo) UpdateTender(ctx context.Context, id uuid.UUID, tender *entity.Tender) (*entity.Tender, error) {
-	const query = `UPDATE tenders SET name = $2, description = $3, service_type = $4, status = $5, organization_id = $6, creator_user_id = $7, version = $8 WHERE id = $1 RETURNING *`
-
-	mdl := modelFromTender(tender)
-
-	commandTag, err := r.db.Exec(ctx, query, id, mdl.Name, mdl.Description, mdl.ServiceType, mdl.Status, mdl.OrganizationID, mdl.Version)
-
-	if err != nil {
-		return nil, fmt.Errorf("update bids: %w", err)
-	}
-
-	if commandTag.RowsAffected() == 0 {
-		return nil, er.ErrNoRowsAffected
+		return nil, fmt.Errorf("scan row: %w", err)
 	}
 
 	return mdl.toTender(), nil
 }
 
-func (r *Repo) UpdateTenderStatus(ctx context.Context, id uuid.UUID, newStatus entity.TenderStatus) (*entity.Tender, error) {
-	const query = `UPDATE tenders SET status = $2 WHERE id = $1 RETURNING *`
-
-	//тут просят creator_id,зачеееем?
+func (r *Repo) GetTenderByIDAndVersion(ctx context.Context, id uuid.UUID, version int) (*entity.Tender, error) {
+	const query = `SELECT * FROM tenders WHERE id = $1 AND version = $2`
 
 	var mdl model
 
-	commandTag, err := r.db.Exec(ctx, query, id, newStatus)
-
-	if err != nil {
-		return nil, fmt.Errorf("update bids: %w", err)
-	}
-
-	if commandTag.RowsAffected() == 0 {
-		return nil, er.ErrNoRowsAffected
+	row := r.db.QueryRow(ctx, query, id, version)
+	if err := row.Scan(&mdl); err != nil {
+		return nil, fmt.Errorf("scan row: %w", err)
 	}
 
 	return mdl.toTender(), nil
+}
+
+func (r *Repo) UpdateTender(ctx context.Context, tender *entity.Tender) (*entity.Tender, error) {
+	const query = `INSERT INTO tenders(id, name, description, service_type, status, organization_id, creator_user_id, version, created_at) 
+	VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`
+
+	mdl := modelFromTender(tender)
+	err := r.db.QueryRow(ctx, query, mdl.ID, mdl.Name, mdl.Description, mdl.ServiceType, mdl.Status, mdl.OrganizationID, mdl.CreatorID, mdl.Version, mdl.CreatedAt).
+		Scan(&mdl.ID, &mdl.Name, &mdl.Description, &mdl.ServiceType, &mdl.Status, &mdl.OrganizationID, &mdl.CreatorID, &mdl.Version, &mdl.CreatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("update tender: %w", err)
+	}
+
+	return mdl.toTender(), nil
+}
+
+func (r *Repo) UpdateTenderStatus(ctx context.Context, id uuid.UUID, newStatus entity.TenderStatus) error {
+	const query = `UPDATE tenders SET status = $2 WHERE id = $1`
+
+	commandTag, err := r.db.Exec(ctx, query, id, newStatus)
+	if err != nil {
+		return fmt.Errorf("update tender status: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return er.ErrNoRowsAffected
+	}
+
+	return nil
 }
