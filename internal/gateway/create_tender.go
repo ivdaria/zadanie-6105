@@ -65,7 +65,6 @@ func (s *Server) CreateTender(ctx echo.Context) error {
 		})
 	}
 
-	// TODO сделать маппинг отдельной функцией CreateTenderJSONBody->entity
 	tender := &entity.Tender{
 		Name:           body.Name,
 		Description:    body.Description,

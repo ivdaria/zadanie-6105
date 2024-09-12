@@ -51,7 +51,7 @@ func main() {
 		userCanEditBidCheckerUseCase,
 	)
 
-	api.RegisterHandlers(e, handlers)
+	api.RegisterHandlersWithBaseURL(e, handlers, "/api")
 
 	e.Logger.Fatal(e.Start("0.0.0.0:8080"))
 
