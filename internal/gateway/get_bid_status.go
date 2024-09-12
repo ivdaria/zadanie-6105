@@ -14,13 +14,6 @@ import (
 func (s *Server) GetBidStatus(ctx echo.Context, bidId api.BidId, params api.GetBidStatusParams) error {
 	rctx := ctx.Request().Context()
 
-	// проверка наличия Username
-	if params.Username == "" {
-		return ctx.JSON(http.StatusBadRequest, api.ErrorResponse{
-			Reason: fmt.Sprintf("add username"),
-		})
-	}
-
 	// есть ли пользователь с таким именем
 	userToGetStatus, err := s.employees.GetByUserName(rctx, params.Username)
 	if err != nil {
@@ -44,82 +37,73 @@ func (s *Server) GetBidStatus(ctx echo.Context, bidId api.BidId, params api.GetB
 
 	bid, err := s.bids.GetBidByID(rctx, bidIDParsed)
 	if err != nil {
-		return ctx.JSON(http.StatusNotFound, api.ErrorResponse{
-			Reason: fmt.Sprintf("no bid with this ID: %v", err.Error()),
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ctx.JSON(http.StatusNotFound, api.ErrorResponse{
+				Reason: fmt.Sprintf("no bid with this ID: %v", err.Error()),
+			})
+		}
+		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
+			Reason: fmt.Sprintf("get bid: %v", err.Error()),
+		})
+	}
+
+	tenderForBid, err := s.tenders.GetTenderByID(rctx, bid.TenderID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ctx.JSON(http.StatusNotFound, api.ErrorResponse{
+				Reason: fmt.Sprintf("no teder with this ID: %v", err.Error()),
+			})
+		}
+		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
+			Reason: fmt.Sprintf("failed to get tender: %v", err.Error()),
 		})
 	}
 
 	// для проверки статуса предложения пользователь должен быть либо автором предложения (если AuthorType - User)
 	// либо ответственным в организации (если AuthorType - Organization)
 	// либо ответственным в организации, которая разместила тендер, связанный с предложением
-
-	var (
-		onBidSide    bool = true
-		onOrgsSide   bool = true
-		onTenderSide bool = true
-	)
-
+	isBidAuthor := true
 	if bid.AuthorType == entity.BidAuthorTypeUser {
 		if bid.CreatorID != userToGetStatus.ID {
-			onBidSide = false
+			isBidAuthor = false
 		}
 	} else {
 		// проверяем, является ли пользователь ответственным организации
-		oldBitOrganization, err := s.organizationResponsibles.GetOrganizationResponsibleByUserID(rctx, bid.CreatorID)
+		oldBidOrganization, err := s.organizationResponsibles.GetOrganizationResponsibleByUserID(rctx, bid.CreatorID)
 		if err != nil {
 			return ctx.JSON(http.StatusBadRequest, api.ErrorResponse{
 				Reason: fmt.Sprintf("failed to get organization ID: %v", err.Error()),
 			})
 		}
 
-		if err := s.organizationResponsibles.IsUserOrganizationResponsible(rctx, userToGetStatus.ID, oldBitOrganization.OrganizationID); errors.Is(err, pgx.ErrNoRows) {
+		if err := s.organizationResponsibles.IsUserOrganizationResponsible(rctx, userToGetStatus.ID, oldBidOrganization.OrganizationID); err != nil {
 			if !errors.Is(err, pgx.ErrNoRows) {
 				return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
 					Reason: fmt.Sprintf("check is user organization responsible: %v", err.Error()),
 				})
 			}
-			onBidSide = false
+			isBidAuthor = false
 		}
 	}
 
-	if err := s.organizationResponsibles.IsUserResponsible(rctx, userToGetStatus.ID); err != nil {
-		if !errors.Is(err, pgx.ErrNoRows) {
-			return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
-				Reason: fmt.Sprintf("check is user responsible: %v", err.Error()),
-			})
-		}
-		onBidSide = false
-	}
-
-	tenderForBid, err := s.tenders.GetTenderByID(rctx, bid.TenderID)
-	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
-			Reason: fmt.Sprintf("failed to get tender: %v", err.Error()),
-		})
-	}
-
-	if !onBidSide || !onOrgsSide {
-		return ctx.JSON(http.StatusForbidden, api.ErrorResponse{
-			Reason: fmt.Sprintf("user is not organization's responsible or not an author of bid"),
-		})
-	}
-
-	if bid.Status != entity.BidStatusPublished {
+	// Если не автор или организация, создавшая бид, то проверяем, является ли пользователь ответственным за тендер
+	if !isBidAuthor {
 		if err := s.organizationResponsibles.IsUserOrganizationResponsible(rctx, userToGetStatus.ID, tenderForBid.OrganizationID); err != nil {
-			if !errors.Is(err, pgx.ErrNoRows) {
-				return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
-					Reason: fmt.Sprintf("check is user responsible: %v", err.Error()),
+			if errors.Is(err, pgx.ErrNoRows) {
+				return ctx.JSON(http.StatusForbidden, api.ErrorResponse{
+					Reason: fmt.Sprintf("can not see bid because it's not a user in tender organization or bid author or bid author org: %v", err.Error()),
 				})
 			}
-			onTenderSide = false
-		}
-
-		if !onBidSide || !onTenderSide {
-			return ctx.JSON(http.StatusForbidden, api.ErrorResponse{
-				Reason: fmt.Sprintf("user is not organization's responsible or not an author of bid"),
+			return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
+				Reason: fmt.Sprintf("check is user organization responsible: %v", err.Error()),
 			})
 		}
 
+		if bid.Status != entity.BidStatusPublished && bid.Status != entity.BidStatusCanceled {
+			return ctx.JSON(http.StatusForbidden, api.ErrorResponse{
+				Reason: "can not see bid because tender organization can see bids only if they are published or cancelled",
+			})
+		}
 	}
 
 	return ctx.JSON(http.StatusOK, bid.Status)

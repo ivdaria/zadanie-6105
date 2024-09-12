@@ -14,13 +14,6 @@ import (
 func (s *Server) GetBidsForTender(ctx echo.Context, tenderId api.TenderId, params api.GetBidsForTenderParams) error {
 	rctx := ctx.Request().Context()
 
-	// проверка наличия Username
-	if params.Username == "" {
-		return ctx.JSON(http.StatusBadRequest, api.ErrorResponse{
-			Reason: fmt.Sprintf("add username"),
-		})
-	}
-
 	// есть ли пользователь с таким именем
 	employee, err := s.employees.GetByUserName(rctx, params.Username)
 	if err != nil {
@@ -44,8 +37,13 @@ func (s *Server) GetBidsForTender(ctx echo.Context, tenderId api.TenderId, param
 
 	tender, err := s.tenders.GetTenderByID(rctx, tenderIDParsed)
 	if err != nil {
-		return ctx.JSON(http.StatusNotFound, api.ErrorResponse{
-			Reason: fmt.Sprintf("no tender with this ID: %v", err.Error()),
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ctx.JSON(http.StatusNotFound, api.ErrorResponse{
+				Reason: fmt.Sprintf("no tender with this ID: %v", err.Error()),
+			})
+		}
+		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
+			Reason: fmt.Sprintf("get tender by id: %v", err.Error()),
 		})
 	}
 

@@ -13,12 +13,6 @@ import (
 func (s *Server) GetUserBids(ctx echo.Context, params api.GetUserBidsParams) error {
 	rctx := ctx.Request().Context()
 
-	if params.Username == nil {
-		return ctx.JSON(http.StatusBadRequest, api.ErrorResponse{
-			Reason: fmt.Sprintf("add username"),
-		})
-	}
-
 	_, err := s.employees.GetByUserName(rctx, *params.Username)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

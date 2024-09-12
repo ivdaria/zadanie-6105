@@ -8,6 +8,7 @@ import (
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/repository/organization"
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/repository/organization_responsible"
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/repository/tenders"
+	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/usecase/check_can_edit_bid"
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/pkg/api"
 	"github.com/caarlos0/env/v11"
 	"github.com/jackc/pgx/v5"
@@ -38,6 +39,7 @@ func main() {
 	bidsRepo := bids.NewRepo(conn)
 	organizationRepo := organization.NewRepo(conn)
 	organizationResponsibleRepo := organization_responsible.NewRepo(conn)
+	userCanEditBidCheckerUseCase := check_can_edit_bid.NewUseCase(organizationResponsibleRepo)
 
 	e := echo.New()
 	handlers := gateway.NewServer(
@@ -46,6 +48,7 @@ func main() {
 		organizationRepo,
 		bidsRepo,
 		organizationResponsibleRepo,
+		userCanEditBidCheckerUseCase,
 	)
 
 	api.RegisterHandlers(e, handlers)

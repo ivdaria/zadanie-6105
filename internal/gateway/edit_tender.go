@@ -40,9 +40,15 @@ func (s *Server) EditTender(ctx echo.Context, tenderId api.TenderId, params api.
 
 	oldTender, err := s.tenders.GetTenderByID(rctx, oldTenderID)
 	if err != nil {
-		return ctx.JSON(http.StatusNotFound, api.ErrorResponse{
-			Reason: fmt.Sprintf("no tender with this ID: %v", err.Error()),
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ctx.JSON(http.StatusNotFound, api.ErrorResponse{
+				Reason: fmt.Sprintf("no tender with this ID: %v", err.Error()),
+			})
+		}
+		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
+			Reason: fmt.Sprintf("get tender by id: %v", err.Error()),
 		})
+
 	}
 
 	//есть ли права у пользователя

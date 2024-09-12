@@ -32,7 +32,8 @@ type bidRepo interface {
 	UpdateBid(ctx context.Context, bid *entity.Bid) (*entity.Bid, error)
 	GetBidByIDAndVersion(ctx context.Context, id uuid.UUID, version int) (*entity.Bid, error)
 	GetBidsByUsername(ctx context.Context, username string, pagination entity.Pagination) ([]*entity.Bid, error)
-	UpdateBidDecision(ctx context.Context, id uuid.UUID, newStatus entity.BidDecision) error
+	UpdateBidDecision(ctx context.Context, id uuid.UUID, bidDecision entity.BidDecision) error
+	UpdateBidStatus(ctx context.Context, id uuid.UUID, newStatus entity.BidStatus) error
 }
 
 type organizationResponsibleRepo interface {
@@ -45,10 +46,6 @@ type userCanEditBidChecker interface {
 	IsUserCanEditBid(ctx context.Context, bid *entity.Bid, user *entity.Employee) (bool, error)
 }
 
-type bidVisibilityChecker interface {
-	IsBidVisibleToUser(ctx context.Context, bid *entity.Bid, user *entity.Employee) (bool, error)
-}
-
 type Server struct {
 	tenders                  tenderRepo
 	employees                employeeRepo
@@ -56,7 +53,6 @@ type Server struct {
 	bids                     bidRepo
 	organizationResponsibles organizationResponsibleRepo
 	userCanEditBidChecker    userCanEditBidChecker
-	bidVisibilityChecker     bidVisibilityChecker
 }
 
 func NewServer(
@@ -66,7 +62,6 @@ func NewServer(
 	bids bidRepo,
 	organizationResponsibles organizationResponsibleRepo,
 	userCanEditBidChecker userCanEditBidChecker,
-	bidVisibilityChecker bidVisibilityChecker,
 ) *Server {
 	return &Server{
 		tenders:                  tenders,
@@ -75,6 +70,5 @@ func NewServer(
 		bids:                     bids,
 		organizationResponsibles: organizationResponsibles,
 		userCanEditBidChecker:    userCanEditBidChecker,
-		bidVisibilityChecker:     bidVisibilityChecker,
 	}
 }

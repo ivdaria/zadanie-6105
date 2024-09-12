@@ -96,7 +96,7 @@ func (r *Repo) GetBidsByTenderID(ctx context.Context, tenderID uuid.UUID, pagina
 	const query = `
 SELECT DISTINCT ON (b.id) b.*
 FROM bids b
-WHERE b.tender_id = @tender_id
+WHERE b.tender_id = @tender_id AND status = ANY('{Published,Canceled}')
 ORDER BY b.id, b.version DESC, name
 `
 
@@ -160,12 +160,27 @@ func (r *Repo) UpdateBid(ctx context.Context, bid *entity.Bid) (*entity.Bid, err
 	return mdl.toBid(), nil
 }
 
-func (r *Repo) UpdateBidDecision(ctx context.Context, id uuid.UUID, newStatus entity.BidDecision) error {
+func (r *Repo) UpdateBidDecision(ctx context.Context, id uuid.UUID, bidDecision entity.BidDecision) error {
 	const query = `UPDATE bids SET decision = $2 WHERE id = $1`
+
+	commandTag, err := r.db.Exec(ctx, query, id, bidDecision)
+	if err != nil {
+		return fmt.Errorf("update bid decision: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return er.ErrNoRowsAffected
+	}
+
+	return nil
+}
+
+func (r *Repo) UpdateBidStatus(ctx context.Context, id uuid.UUID, newStatus entity.BidStatus) error {
+	const query = `UPDATE bids SET status = $2 WHERE id = $1`
 
 	commandTag, err := r.db.Exec(ctx, query, id, newStatus)
 	if err != nil {
-		return fmt.Errorf("update bid decision: %w", err)
+		return fmt.Errorf("update bid status: %w", err)
 	}
 
 	if commandTag.RowsAffected() == 0 {
