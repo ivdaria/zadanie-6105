@@ -15,6 +15,7 @@ const (
 type BidDecision string
 
 const (
+	BidDecisionNone     BidDecision = "No decision"
 	BidDecisionApproved BidDecision = "Approved"
 	BidDecisionRejected BidDecision = "Rejected"
 )
@@ -22,21 +23,40 @@ const (
 type BidStatus string
 
 const (
-	BidStatusApproved  BidStatus = "Approved"
 	BidStatusCanceled  BidStatus = "Canceled"
 	BidStatusCreated   BidStatus = "Created"
 	BidStatusPublished BidStatus = "Published"
-	BidStatusRejected  BidStatus = "Rejected"
 )
 
 type Bid struct {
-	ID             uuid.UUID
-	TenderID       uuid.UUID
-	CreatorID      uuid.UUID
-	OrganizationID uuid.UUID
-	Decision       BidDecision
-	Status         BidStatus
-	AuthorType     BidAuthorType
-	Version        int
-	CreatedAt      time.Time
+	ID          uuid.UUID
+	Name        string
+	TenderID    uuid.UUID
+	CreatorID   uuid.UUID
+	Description string
+	Decision    BidDecision
+	Status      BidStatus
+	AuthorType  BidAuthorType
+	Version     int
+	CreatedAt   time.Time
+}
+
+func (b *Bid) Patch(newName *string, newDescription *string) *Bid {
+	patchedBid := *b
+	if newName != nil {
+		patchedBid.Name = *newName
+	}
+	if newDescription != nil {
+		patchedBid.Description = *newDescription
+	}
+	patchedBid.Version += 1
+
+	return &patchedBid
+}
+
+func (b *Bid) Rollback(bidToRollback *Bid) *Bid {
+	result := *bidToRollback
+	result.Version = b.Version + 1
+
+	return &result
 }
