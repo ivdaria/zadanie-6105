@@ -4,31 +4,30 @@ import (
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/entity"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"time"
 )
 
 type model struct {
 	ID               uuid.UUID
 	BidID            uuid.UUID
-	BidAuthorID      uuid.UUID
-	TenderID         uuid.UUID
 	FeedbackAuthorID uuid.UUID
 	Comment          string
+	CreatedAt        time.Time
 }
 
 type models []*model
 
 func (m *model) ScanRow(rows pgx.Rows) error {
-	return rows.Scan(&m.ID, &m.BidID, &m.BidAuthorID, &m.TenderID, &m.FeedbackAuthorID, &m.Comment)
+	return rows.Scan(&m.ID, &m.BidID, &m.FeedbackAuthorID, &m.Comment, &m.CreatedAt)
 }
 
 func (m *model) toFeedback() *entity.Feedback {
 	return &entity.Feedback{
 		ID:               m.ID,
 		BidID:            m.BidID,
-		BidAuthorID:      m.BidAuthorID,
-		TenderID:         m.TenderID,
 		FeedbackAuthorID: m.FeedbackAuthorID,
 		Comment:          m.Comment,
+		CreatedAt:        m.CreatedAt,
 	}
 }
 
@@ -49,9 +48,8 @@ func modelFromFeedback(item *entity.Feedback) *model {
 	return &model{
 		ID:               item.ID,
 		BidID:            item.BidID,
-		BidAuthorID:      item.BidAuthorID,
-		TenderID:         item.TenderID,
 		FeedbackAuthorID: item.FeedbackAuthorID,
 		Comment:          item.Comment,
+		CreatedAt:        item.CreatedAt,
 	}
 }

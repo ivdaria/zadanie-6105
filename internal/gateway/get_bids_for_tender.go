@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"time"
 )
 
 func (s *Server) GetBidsForTender(ctx echo.Context, tenderId api.TenderId, params api.GetBidsForTenderParams) error {
@@ -67,10 +68,21 @@ func (s *Server) GetBidsForTender(ctx echo.Context, tenderId api.TenderId, param
 		})
 	}
 
-	if len(bids) == 0 {
-		return ctx.JSON(http.StatusOK, []interface{}{})
+	apiBids := make([]api.Bid, 0, len(bids))
+	for _, bid := range bids {
+		apiBids = append(apiBids, api.Bid{
+			AuthorId:    bid.CreatorID.String(),
+			AuthorType:  api.BidAuthorType(bid.AuthorType),
+			CreatedAt:   bid.CreatedAt.Format(time.RFC3339),
+			Description: bid.Description,
+			Id:          bid.ID.String(),
+			Name:        bid.Name,
+			Status:      api.BidStatus(bid.Status),
+			TenderId:    bid.TenderID.String(),
+			Version:     api.BidVersion(bid.Version),
+		})
 	}
 
-	return ctx.JSON(http.StatusOK, bids)
+	return ctx.JSON(http.StatusOK, apiBids)
 
 }

@@ -6,6 +6,7 @@ import (
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/pkg/api"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"time"
 )
 
 func (s *Server) GetTenders(ctx echo.Context, params api.GetTendersParams) error {
@@ -31,9 +32,19 @@ func (s *Server) GetTenders(ctx echo.Context, params api.GetTendersParams) error
 		})
 	}
 
-	if len(allTenders) == 0 {
-		return ctx.JSON(http.StatusOK, []interface{}{})
+	apiTenders := make([]api.Tender, 0, len(allTenders))
+	for _, tender := range allTenders {
+		apiTenders = append(apiTenders, api.Tender{
+			CreatedAt:      tender.CreatedAt.Format(time.RFC3339),
+			Description:    tender.Description,
+			Id:             tender.ID.String(),
+			Name:           tender.Name,
+			OrganizationId: tender.ID.String(),
+			ServiceType:    api.TenderServiceType(tender.ServiceType),
+			Status:         api.TenderStatus(tender.Status),
+			Version:        api.TenderVersion(tender.Version),
+		})
 	}
 
-	return ctx.JSON(http.StatusOK, allTenders)
+	return ctx.JSON(http.StatusOK, apiTenders)
 }

@@ -42,6 +42,11 @@ type organizationResponsibleRepo interface {
 	GetOrganizationResponsibleByUserID(ctx context.Context, userID uuid.UUID) (*entity.OrganizationResponsible, error)
 }
 
+type feedbackRepo interface {
+	CreateFeedback(ctx context.Context, feedback *entity.Feedback) error
+	GetFeedbackByTenderIDAndAuthor(ctx context.Context, tenderID uuid.UUID, authorID uuid.UUID, pagination entity.Pagination) ([]*entity.Feedback, error)
+}
+
 type userCanEditBidChecker interface {
 	IsUserCanEditBid(ctx context.Context, bid *entity.Bid, user *entity.Employee) (bool, error)
 }
@@ -52,6 +57,7 @@ type Server struct {
 	organizations            organizationRepo
 	bids                     bidRepo
 	organizationResponsibles organizationResponsibleRepo
+	feedbacks                feedbackRepo
 	userCanEditBidChecker    userCanEditBidChecker
 }
 
@@ -61,6 +67,7 @@ func NewServer(
 	organizations organizationRepo,
 	bids bidRepo,
 	organizationResponsibles organizationResponsibleRepo,
+	feedbacks feedbackRepo,
 	userCanEditBidChecker userCanEditBidChecker,
 ) *Server {
 	return &Server{
@@ -69,6 +76,7 @@ func NewServer(
 		organizations:            organizations,
 		bids:                     bids,
 		organizationResponsibles: organizationResponsibles,
+		feedbacks:                feedbacks,
 		userCanEditBidChecker:    userCanEditBidChecker,
 	}
 }

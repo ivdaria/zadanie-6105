@@ -99,11 +99,10 @@ CREATE TABLE IF NOT EXISTS bids
 CREATE TABLE IF NOT EXISTS feedback
 (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    bid_id          uuid REFERENCES bids (id) NOT NULL,
-    bid_author      uuid REFERENCES bids (creator_id) NOT NULL,
-    tender_id       uuid REFERENCES bids (id) NOT NULL ,
+    bid_id          uuid NOT NULL,
     feedback_author uuid REFERENCES employee (id) NOT NULL,
-    feedback        VARCHAR(1000) NOT NULL
+    feedback        VARCHAR(1000) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 -- +goose StatementEnd
