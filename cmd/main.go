@@ -17,7 +17,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pressly/goose/v3"
 
-	_ "git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/migrations"
 	_ "github.com/lib/pq"
 )
 
@@ -68,7 +67,7 @@ func main() {
 }
 
 func upMigrations(ctx context.Context, cfg Config) {
-	db, err := sql.Open("postgres", cfg.DSN)
+	db, err := sql.Open("postgres", cfg.DSN+"?sslmode=disable")
 	if err != nil {
 		panic(err)
 	}
