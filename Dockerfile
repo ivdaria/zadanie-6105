@@ -19,5 +19,4 @@ RUN go build -o /zadanie ./cmd
 EXPOSE 8080
 
 # Run
-CMD ["/zadanie"]
-
+ENTRYPOINT [ "/zadanie" ]
