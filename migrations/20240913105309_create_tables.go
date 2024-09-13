@@ -23,11 +23,17 @@ CREATE TABLE IF NOT EXISTS employee
     updated_at TIMESTAMP        DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TYPE organization_type AS ENUM (
-    'IE',
-    'LLC',
-    'JSC'
-    );
+DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'organization_type') THEN
+            CREATE TYPE organization_type AS ENUM (
+                'IE',
+                'LLC',
+                'JSC'
+                );
+        END IF;
+        --more types here...
+    END$$;
 
 CREATE TABLE IF NOT EXISTS organization
 (
@@ -46,17 +52,31 @@ CREATE TABLE IF NOT EXISTS organization_responsible
     user_id         UUID REFERENCES employee (id) ON DELETE CASCADE
 );
 
-CREATE TYPE service_type AS ENUM (
+DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'service_type') THEN
+            CREATE TYPE service_type AS ENUM (
     'Construction',
     'Delivery',
     'Manufacture'
     );
+        END IF;
+        --more types here...
+    END$$;
 
-CREATE TYPE tender_status AS ENUM (
+
+
+DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tender_status') THEN
+            CREATE TYPE tender_status AS ENUM (
     'Created',
     'Published',
     'Closed'
     );
+        END IF;
+        --more types here...
+    END$$;
 
 CREATE TABLE IF NOT EXISTS tenders
 (
@@ -73,24 +93,44 @@ CREATE TABLE IF NOT EXISTS tenders
     CONSTRAINT pk_tenders PRIMARY KEY (id, version)
 );
 
-CREATE TYPE bid_decision AS ENUM (
+DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'bid_decision') THEN
+            CREATE TYPE bid_decision AS ENUM (
     'No decision',
     'Approved',
     'Rejected'
     );
+        END IF;
+        --more types here...
+    END$$;
 
-CREATE TYPE bid_status AS ENUM (
+DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'bid_status') THEN
+            CREATE TYPE bid_status AS ENUM (
     'Approved',
     'Canceled',
     'Created',
     'Published',
     'Rejected'
     );
+        END IF;
+        --more types here...
+    END$$;
 
-CREATE TYPE bid_author AS ENUM (
+DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'bid_author') THEN
+            CREATE TYPE bid_author AS ENUM (
     'User',
     'Organization'
     );
+        END IF;
+        --more types here...
+    END$$;
+
+
 
 CREATE TABLE IF NOT EXISTS bids
 (
