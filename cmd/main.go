@@ -68,7 +68,7 @@ func main() {
 }
 
 func upMigrations(ctx context.Context, cfg Config) {
-	db, err := sql.Open("postgres", cfg.DSN+"?&sslmode=disable")
+	db, err := sql.Open("postgres", cfg.DSN)
 	if err != nil {
 		panic(err)
 	}
