@@ -16,12 +16,12 @@ func (s *Server) RollbackTender(ctx echo.Context, tenderId api.TenderId, version
 
 	if params.Username == "" {
 		return ctx.JSON(http.StatusBadRequest, api.ErrorResponse{
-			Reason: fmt.Sprintf("add username"),
+			Reason: "add username",
 		})
 	}
 	if version < 1 {
 		return ctx.JSON(http.StatusBadRequest, api.ErrorResponse{
-			Reason: fmt.Sprintf("invalid version. Version should be >= 1"),
+			Reason: "invalid version. Version should be >= 1",
 		})
 	}
 

@@ -16,6 +16,7 @@ type model struct {
 	UpdatedAt time.Time
 }
 
+//nolint:unused
 type models []*model
 
 func (m *model) ScanRow(rows pgx.Rows) error {
@@ -33,6 +34,7 @@ func (m *model) toEmployee() *entity.Employee {
 	}
 }
 
+//nolint:unused
 func (mdls models) toEmployees() []*entity.Employee {
 	if len(mdls) == 0 {
 		return nil
@@ -46,6 +48,7 @@ func (mdls models) toEmployees() []*entity.Employee {
 	return result
 }
 
+//nolint:unused
 func modelFromEmployee(item *entity.Employee) *model {
 	return &model{
 		ID:        item.ID,

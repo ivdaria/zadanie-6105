@@ -16,7 +16,7 @@ func (s *Server) RollbackBid(ctx echo.Context, bidId api.BidId, version int32, p
 
 	if version < 1 {
 		return ctx.JSON(http.StatusBadRequest, api.ErrorResponse{
-			Reason: fmt.Sprintf("invalid version. Version should be >= 1"),
+			Reason: "invalid version. Version should be >= 1",
 		})
 	}
 

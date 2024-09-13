@@ -61,7 +61,7 @@ func (s *Server) CreateTender(ctx echo.Context) error {
 			})
 		}
 		return ctx.JSON(http.StatusForbidden, api.ErrorResponse{
-			Reason: fmt.Sprintf("user is not an organization's responsible"),
+			Reason: "user is not an organization's responsible",
 		})
 	}
 

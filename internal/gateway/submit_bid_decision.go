@@ -60,7 +60,7 @@ func (s *Server) SubmitBidDecision(ctx echo.Context, bidId api.BidId, params api
 	if err := s.organizationResponsibles.IsUserOrganizationResponsible(rctx, decisionSubmitUser.ID, tenderForBid.OrganizationID); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ctx.JSON(http.StatusForbidden, api.ErrorResponse{
-				Reason: fmt.Sprintf("user is not organization's responsible or not an author of bid"),
+				Reason: "user is not organization's responsible or not an author of bid",
 			})
 		}
 		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{

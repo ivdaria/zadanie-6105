@@ -17,7 +17,7 @@ func (s *Server) UpdateTenderStatus(ctx echo.Context, tenderId api.TenderId, par
 
 	if params.Username == "" || params.Status == "" {
 		return ctx.JSON(http.StatusBadRequest, api.ErrorResponse{
-			Reason: fmt.Sprintf("add status or username"),
+			Reason: "add status or username",
 		})
 	}
 

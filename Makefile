@@ -18,3 +18,9 @@ install-oapi-gen:
 
 gen-spec:
 	go generate -run="oapi-codegen" -tags="tools" -x ./...
+
+install-lint:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+lint: install-lint
+	golangci-lint run

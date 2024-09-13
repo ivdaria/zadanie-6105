@@ -12,6 +12,7 @@ type model struct {
 	EmployeeID     uuid.UUID
 }
 
+//nolint:unused
 type models []*model
 
 func (m *model) ScanRow(rows pgx.Rows) error {
@@ -26,6 +27,7 @@ func (m *model) toOrganizationResponsible() *entity.OrganizationResponsible {
 	}
 }
 
+//nolint:unused
 func (mdls models) toOrganizations() []*entity.OrganizationResponsible {
 	if len(mdls) == 0 {
 		return nil
@@ -39,6 +41,7 @@ func (mdls models) toOrganizations() []*entity.OrganizationResponsible {
 	return result
 }
 
+//nolint:unused
 func modelFromOrganizationResponsible(item *entity.OrganizationResponsible) *model {
 	return &model{
 		ID:             item.ID,

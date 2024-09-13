@@ -43,7 +43,7 @@ func (s *Server) CreateBid(ctx echo.Context) error {
 	// Проверка, что тендер опубликован
 	if tender.Status != entity.TenderStatusPublished {
 		return ctx.JSON(http.StatusBadRequest, api.ErrorResponse{
-			Reason: fmt.Sprintf("tender is not published"),
+			Reason: "tender is not published",
 		})
 	}
 
@@ -71,7 +71,7 @@ func (s *Server) CreateBid(ctx echo.Context) error {
 	if err := s.organizationResponsibles.IsUserResponsible(rctx, creatorID); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ctx.JSON(http.StatusForbidden, api.ErrorResponse{
-				Reason: fmt.Sprintf("user is not an organization's responsible"),
+				Reason: "user is not an organization's responsible",
 			})
 		}
 		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{

@@ -16,7 +16,7 @@ func (s *Server) GetUserTenders(ctx echo.Context, params api.GetUserTendersParam
 
 	if params.Username == nil {
 		return ctx.JSON(http.StatusBadRequest, api.ErrorResponse{
-			Reason: fmt.Sprintf("add username"),
+			Reason: "add username",
 		})
 	}
 
