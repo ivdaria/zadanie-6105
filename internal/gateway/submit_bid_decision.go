@@ -14,7 +14,6 @@ import (
 
 func (s *Server) SubmitBidDecision(ctx echo.Context, bidId api.BidId, params api.SubmitBidDecisionParams) error {
 	rctx := ctx.Request().Context()
-
 	// проверка, что пользователь существует
 	decisionSubmitUser, err := s.employees.GetByUserName(rctx, params.Username)
 	if err != nil {
@@ -69,6 +68,7 @@ func (s *Server) SubmitBidDecision(ctx echo.Context, bidId api.BidId, params api
 		})
 	}
 
+	//TODO выполнять в транзакции
 	// изменяем решение по предложению
 	err = s.bids.UpdateBidDecision(rctx, bidForSubmition.ID, entity.BidDecision(params.Decision))
 	if err != nil {
@@ -77,22 +77,22 @@ func (s *Server) SubmitBidDecision(ctx echo.Context, bidId api.BidId, params api
 		})
 	}
 
-	// получаем предложение с принятым решением
-	updatedBid, err := s.bids.GetBidByID(rctx, bidForSubmition.ID)
-	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
-			Reason: fmt.Sprintf("failed to get updated bid: %v", err.Error()),
-		})
-	}
-
 	// если решение - Approved, закрываем тендер, на который было открыто предложение
-	if updatedBid.Decision == entity.BidDecisionApproved {
+	if entity.BidDecision(params.Decision) == entity.BidDecisionApproved {
 		err = s.tenders.UpdateTenderStatus(rctx, tenderForBid.ID, entity.TenderStatusClosed)
 		if err != nil {
 			return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
 				Reason: fmt.Sprintf("failed to update tender's status: %v", err.Error()),
 			})
 		}
+	}
+
+	// получаем предложение с принятым решением
+	updatedBid, err := s.bids.GetBidByID(rctx, bidForSubmition.ID)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
+			Reason: fmt.Sprintf("failed to get updated bid: %v", err.Error()),
+		})
 	}
 
 	return ctx.JSON(http.StatusOK, api.Bid{

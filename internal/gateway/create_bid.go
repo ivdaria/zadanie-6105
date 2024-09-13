@@ -54,11 +54,12 @@ func (s *Server) CreateBid(ctx echo.Context) error {
 		})
 	}
 
+	// провереряем, что такой пользователь в принципе существует
 	_, err = s.employees.GetEmployeeByID(rctx, creatorID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ctx.JSON(http.StatusUnauthorized, api.ErrorResponse{
-				Reason: fmt.Sprintf("user is not an organization's responsible"),
+				Reason: fmt.Sprintf("no employee with this ID: %v", err.Error()),
 			})
 		}
 		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
@@ -66,6 +67,7 @@ func (s *Server) CreateBid(ctx echo.Context) error {
 		})
 	}
 
+	// проверяем, что пользователь входит в список ответственных
 	if err := s.organizationResponsibles.IsUserResponsible(rctx, creatorID); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ctx.JSON(http.StatusForbidden, api.ErrorResponse{

@@ -19,7 +19,8 @@ import (
 //POSTGRES_CONN=postgres://postgres:postgres@localhost:5432/zadanie
 
 type Config struct {
-	DSN string `env:"POSTGRES_CONN"`
+	DSN           string `env:"POSTGRES_CONN"`
+	ServerAddress string `env:"SERVER_ADDRESS" envDefault:"0.0.0.0:8080"`
 }
 
 func main() {
@@ -56,6 +57,6 @@ func main() {
 
 	api.RegisterHandlersWithBaseURL(e, handlers, "/api")
 
-	e.Logger.Fatal(e.Start("0.0.0.0:8080"))
+	e.Logger.Fatal(e.Start(cfg.ServerAddress))
 
 }

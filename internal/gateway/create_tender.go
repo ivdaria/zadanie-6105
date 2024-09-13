@@ -86,7 +86,7 @@ func (s *Server) CreateTender(ctx echo.Context) error {
 		CreatedAt:      tender.CreatedAt.Format(time.RFC3339),
 		Description:    tender.Description,
 		Id:             tender.ID.String(),
-		Name:           body.Name,
+		Name:           tender.Name,
 		OrganizationId: organization.ID.String(),
 		ServiceType:    api.TenderServiceType(tender.ServiceType),
 		Status:         api.TenderStatus(tender.Status),

@@ -85,13 +85,13 @@ CREATE TABLE IF NOT EXISTS bids
     id          UUID      DEFAULT uuid_generate_v4(),
     tender_id   uuid                                            NOT NULL,
     creator_id  uuid REFERENCES employee (id) ON DELETE CASCADE NOT NULL,
-    name        VARCHAR(100) NOT NULL,
-    description VARCHAR(500) NOT NULL,
-    decision    bid_decision NOT NULL,
-    status      bid_status NOT NULL,
-    author_type bid_author NOT NULL,
+    name        VARCHAR(100)                                    NOT NULL,
+    description VARCHAR(500)                                    NOT NULL,
+    decision    bid_decision                                    NOT NULL,
+    status      bid_status                                      NOT NULL,
+    author_type bid_author                                      NOT NULL,
     version     INT                                             NOT NULL,
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP             NOT NULL,
 
     CONSTRAINT pk_bids PRIMARY KEY (id, version)
 );
@@ -99,10 +99,10 @@ CREATE TABLE IF NOT EXISTS bids
 CREATE TABLE IF NOT EXISTS feedback
 (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    bid_id          uuid NOT NULL,
-    feedback_author uuid REFERENCES employee (id) NOT NULL,
-    feedback        VARCHAR(1000) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    bid_id          uuid                                       NOT NULL,
+    feedback_author uuid REFERENCES employee (id)              NOT NULL,
+    feedback        VARCHAR(1000)                              NOT NULL,
+    created_at      TIMESTAMP        DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 -- +goose StatementEnd
