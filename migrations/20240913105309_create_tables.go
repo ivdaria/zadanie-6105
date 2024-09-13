@@ -1,5 +1,17 @@
--- +goose Up
--- +goose StatementBegin
+package migrations
+
+import (
+	"context"
+	"database/sql"
+	"github.com/pressly/goose/v3"
+)
+
+func init() {
+	goose.AddMigrationContext(upCreateTables, downCreateTables)
+}
+
+func upCreateTables(ctx context.Context, tx *sql.Tx) error {
+	_, err := tx.Exec(`
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS employee
 (
@@ -112,11 +124,15 @@ CREATE TABLE IF NOT EXISTS decisions
     employee_id uuid REFERENCES employee(id) NOT NULL,
     decision       bid_decision                  NOT NULL
 );
+`)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
--- +goose StatementEnd
-
--- +goose Down
--- +goose StatementBegin
+func downCreateTables(ctx context.Context, tx *sql.Tx) error {
+	_, err := tx.Exec(`
 DROP TABLE IF EXISTS feedback;
 DROP TABLE IF EXISTS decisions;
 DROP TABLE IF EXISTS bids;
@@ -131,4 +147,9 @@ DROP TYPE IF EXISTS organization_type;
 DROP TYPE IF EXISTS bid_decision;
 DROP TYPE IF EXISTS bid_status;
 DROP TYPE IF EXISTS bid_author;
--- +goose StatementEnd
+`)
+	if err != nil {
+		return err
+	}
+	return nil
+}

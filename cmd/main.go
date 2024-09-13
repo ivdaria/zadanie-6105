@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/gateway"
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/repository/bids"
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/repository/employee"
@@ -14,6 +15,10 @@ import (
 	"github.com/caarlos0/env/v11"
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
+	"github.com/pressly/goose/v3"
+
+	_ "git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/migrations"
+	_ "github.com/lib/pq"
 )
 
 //POSTGRES_CONN=postgres://postgres:postgres@localhost:5432/zadanie
@@ -29,6 +34,8 @@ func main() {
 	if err := env.Parse(&cfg); err != nil {
 		panic(err)
 	}
+
+	upMigrations(ctx, cfg)
 
 	conn, err := pgx.Connect(ctx, cfg.DSN)
 	if err != nil {
@@ -58,5 +65,20 @@ func main() {
 	api.RegisterHandlersWithBaseURL(e, handlers, "/api")
 
 	e.Logger.Fatal(e.Start(cfg.ServerAddress))
+}
 
+func upMigrations(ctx context.Context, cfg Config) {
+	db, err := sql.Open("postgres", cfg.DSN+"?&sslmode=disable")
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	if err := db.Ping(); err != nil {
+		panic(err)
+	}
+
+	if err := goose.RunContext(ctx, "up", db, "./migrations"); err != nil {
+		panic(err)
+	}
 }
