@@ -51,7 +51,6 @@ $$
                 'Manufacture'
                 );
         END IF;
-        --more types here...
     END
 $$;
 
