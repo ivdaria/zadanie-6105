@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/gateway"
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/repository/bids"
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/repository/employee"
@@ -13,11 +14,13 @@ import (
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/internal/usecase/check_can_edit_bid"
 	"git.codenrock.com/avito-testirovanie-na-backend-1270/cnrprod1725731644-team-78845/zadanie-6105/pkg/api"
 	"github.com/caarlos0/env/v11"
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
-	"github.com/pressly/goose/v3"
-
+	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
+	echomiddleware "github.com/oapi-codegen/echo-middleware"
+	"github.com/pressly/goose/v3"
 )
 
 //POSTGRES_CONN=postgres://postgres:postgres@localhost:5432/zadanie
@@ -50,7 +53,22 @@ func main() {
 	feedbackRepo := feedback.NewRepo(conn)
 	userCanEditBidCheckerUseCase := check_can_edit_bid.NewUseCase(organizationResponsibleRepo)
 
+	swagger, err := api.GetSwagger()
+	if err != nil {
+		panic(fmt.Errorf("get swagger: %w", err))
+	}
+	//Обход проверки валидации сервера в сваггере
+	swagger.Servers = openapi3.Servers{
+		{
+			URL: "/api",
+		},
+	}
+
 	e := echo.New()
+	e.Use(middleware.Logger())
+	validator := echomiddleware.OapiRequestValidator(swagger)
+
+	e.Pre(validator)
 	handlers := gateway.NewServer(
 		tendersRepo,
 		employeeRepo,
