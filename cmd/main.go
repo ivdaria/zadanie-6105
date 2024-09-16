@@ -33,9 +33,11 @@ type Config struct {
 func main() {
 	ctx := context.Background()
 	var cfg Config
+
 	if err := env.Parse(&cfg); err != nil {
 		panic(err)
 	}
+	fmt.Printf("%+v\n", cfg)
 
 	upMigrations(ctx, cfg)
 

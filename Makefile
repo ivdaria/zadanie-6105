@@ -1,7 +1,7 @@
 DB_DSN="postgres://postgres:postgres@localhost:5432/zadanie"
 MIGRATIONS_DIR=migrations
 
-install-deps:
+install-deps: install-lint
 	go install github.com/pressly/goose/v3/cmd/goose@latest
 
 migrations-up:
